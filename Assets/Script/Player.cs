@@ -18,10 +18,17 @@ public class Player : MonoBehaviour
 
     public GameObject bulletObj;
 
+    private bool move = false;
+    private float moveHorizontal = 0;
+
     // Update is called once per frame
     void Update()
     {
-        PlayerMove();
+        if (move == true)
+        {
+            PlayerMove();
+        }
+
 
         if (Input.GetButtonDown("Jump"))
         {
@@ -37,6 +44,7 @@ public class Player : MonoBehaviour
     private void PlayerMove()
     {
         float h = Input.GetAxis("Horizontal");
+        moveHorizontal = h;
         float playerSpeed = h * moveSpeed * Time.deltaTime;
         Vector3 vector3 = new Vector3();
         vector3.x = playerSpeed;
@@ -61,7 +69,7 @@ public class Player : MonoBehaviour
 
     private void PlayerJump()
     {
-        if(isJump == false)
+        if (isJump == false)
         {
             GetComponent<Animator>().SetBool("Walk", false);
             GetComponent<Animator>().SetBool("Jump", true);
@@ -74,17 +82,47 @@ public class Player : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if(collision.collider.CompareTag("Platform"))
+        if (collision.collider.CompareTag("Platform"))
         {
             GetComponent<Animator>().SetBool("Jump", false);
             isJump = false;
+        }
+        else if (collision.collider.CompareTag("Enemy"))
+        {
+            DataManager.instance.playerHP -= 1;
+            UIManager.instance.PlayerHP();
+            Debug.Log(DataManager.instance.playerHP);
         }
     }
 
     private void Fire()
     {
+        AudioClip audioClip = Resources.Load<AudioClip>("RangedAttack.ogg");
+        GetComponent<AudioSource>().clip = audioClip;
+        GetComponent<AudioSource>().Play();
         float direction = transform.localPosition.x;
         Quaternion quaternion = new Quaternion(0, 0, 0, 0);
         Instantiate(bulletObj, bulletPos.transform.position, quaternion).GetComponent<Bullet>().InstantiateBullet(direction);
+    }
+
+    public void OnMove(bool _right)
+    {
+        if (_right)
+        {
+            moveHorizontal = 1;
+        }
+        else
+        {
+            moveHorizontal = -1;
+        }
+
+        move = true;
+    }
+
+    public void OffMove()
+    {
+        moveHorizontal = 0;
+
+        move = false;
     }
 }
